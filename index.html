@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Domain Driven Design - DDD</title>
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/solarized.css" id="theme">
+
+		<!-- Code syntax highlighting -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+		<div class="reveal">
+
+			<div class="slides">
+				<section>
+					<h1>Domain Driven Design - DDD</h1>
+					<h3>Using together with Rails</h3>
+					<p>
+						<small>Matheus Cáceres <a href="http://twitter.com/matheusca">@matheusca</a></small>
+					</p>
+				</section>
+
+				<section>
+					<h2>Rails Way is not really wrong.</h2>
+					<p>
+						When you need proof your business or you have a small project it accepted fast methods.
+					</p>
+				</section>
+
+				<section>
+					<h2>The problem</h2>
+					<p>
+						Fat models, skinny controllers.
+					</p>
+					<img src="http://dssmithpc.com/mother-of-god-face-219.jpg" width="500">
+				</section>
+
+				<section>
+					<h2>What problem with Rails MVC?</h2>
+					<section>
+						<p>
+							Model has many responsabilities.
+						</p>
+					</section>
+					<section>
+						<p>
+							Model contains business rules.
+						</p>
+					</section>
+					<section>
+						<p>
+							Avoid the entire file has thousands lines, it used concerns.
+						</p>
+					</section>
+					<section>
+						<img src="https://s3.amazonaws.com/vaporbase/uploads/Image/fat-skinny.jpg" width="500">
+					</section>
+				</section>
+
+				<section>
+					<h2>Architeture approachs.</h2>
+
+					<ul>
+						<li class="fragment">Clean Architeture.</li>
+						<li class="fragment">DCI.</li>
+						<li class="fragment">Hexagonal Architeture.</li>
+						<li class="fragment"><strong>Domain Driven Design.</strong></li>
+					</ul>
+				</section>
+
+				<section>
+					<h2>&#9829; DDD concepts &#9829;</h2>
+					<p>
+						Let's talk about DDD concepts.
+					</p>
+				</section>
+
+				<section>
+					<h2>Layers</h2>
+					<img src="http://williamdurand.fr/images/posts/ddd.png" width="700">
+				</section>
+
+				<section>
+					<h2>Entity</h2>
+					<section>
+						It has an unique ID.
+					</section>
+					<section>
+						Your RG and CPF are an entity.
+					</section>
+					<section>
+						Domain ubiquitous name.
+					</section>
+					<section>
+						Relation between another entities.
+					</section>
+					<section>
+						<img src="https://www.gliffy.com/_media/diagram_cache/4218700_L.png">
+					</section>
+					<section data-markdown>
+						<script type="text/template">
+						```
+						class Customer
+						  attr_accessor :id, :name, :email, :address
+						end
+						```
+						</script>
+					</section>
+				</section>
+
+				<section>
+					<h2>Value Object</h2>
+					<section>
+						<p>
+							It is immutable.
+						</p>
+					</section>
+					<section>
+						<p>
+							V.O returns a new instance with value altered.
+						</p>
+					</section>
+					<section data-markdown>
+						<script type="text/template">
+						```ruby
+						class Money
+						  attr_reader :amount, :currency
+						  EXCHANGE_RATES = { "USD_TO_DKK" => 6 }
+
+						  def initialize(amount, currency = "USD")
+						    @amount, @currency = amount, currency
+						  end
+
+						  def exchange_to(other_currency)
+						    exchanged_amount = (amount * EXCHANGE_RATES["#{currency}_TO_#{other_currency}"]).floor
+						    Money.new(exchanged_amount, other_currency)
+						  end
+						end
+						```
+						</script>
+					</section>
+				</section>
+
+				<section>
+					<h2>Agregator</h2>
+					<section>
+						<p>Entities or Value Objects composite whitin unique class.</p>
+					</section>
+					<section>
+						<p>One root per class.</p>
+					</section>
+					<section>
+						<p>Agregation manipulation datas it just can be by root.</p>
+					</section>
+					<section data-markdown>
+						<script type="text/template">
+						```
+						class Transaction
+						  attr_accessor :user
+
+						  def initialize(user)
+						    @user = user
+						  end
+
+						  def money=(amount, currency = 'USD')
+						    Money.new(amount, currency)
+						  end
+						end
+						```
+						</script>
+					</section>
+				</section>
+
+				<section>
+					<h2>Repository</h2>
+					<section>
+						<p>Cycle life object management.</p>
+					</section>
+					<section>
+						<p>Entities, Value Object and Agregation.</p>
+					</section>
+					<section>
+						<p>Operation as: create, edit and remove objects.</p>
+					</section>
+					<section>
+						<p>ActiveRecord works like a repository.</p>
+					</section>
+					<section data-markdown>
+						<script type="text/template">
+						```ruby
+						class TransactionRepository
+						  extend Forwardable
+
+						  def_delegator :@record, :find
+
+						  def initialize(record = TransactionRecord)
+						    @record = record
+						  end
+
+						  def save(transaction)
+							record.new do |r|
+						      r.user = transaction.user
+						      r.amount = transaction.money.amount
+						      r.currency = transaction.money.currency
+
+						      r.save
+							end
+						  end
+						end
+						```
+						</script>
+					</section>
+				</section>
+
+				<section>
+					<h2>Anti Corruption Layer</h2>
+					<section>
+						<p>New system works with legacy system.</p>
+					</section>
+					<section>
+						<img src="http://www.agileandart.com/wp-content/uploads/2010/07/Screen-shot-2010-07-16-at-09.51.00.png">
+					</section>
+				</section>
+
+				<section data-background="https://media.giphy.com/media/jYAGkoghdmD9S/giphy.gif">
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+
+			// Full list of configuration options available at:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: true,
+
+				transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+				// Optional reveal.js plugins
+				dependencies: [
+					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: 'plugin/zoom-js/zoom.js', async: true },
+					{ src: 'plugin/notes/notes.js', async: true }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
