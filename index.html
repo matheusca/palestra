@@ -1,6 +1,5 @@
 <!doctype html>
 <html lang="en">
-
 	<head>
 		<meta charset="utf-8">
 
@@ -32,7 +31,6 @@
 	</head>
 
 	<body>
-
 		<div class="reveal">
 
 			<div class="slides">
@@ -41,6 +39,8 @@
 					<h3>Using together with Rails</h3>
 					<p>
 						<small>Matheus Cáceres <a href="http://twitter.com/matheusca">@matheusca</a></small>
+            <br>
+						<small>Hélio Costa <a href="http://twitter.com/hlegius">@hlegius</a></small>
 					</p>
 				</section>
 
@@ -85,10 +85,9 @@
 					<h2>Architeture approachs.</h2>
 
 					<ul>
-						<li class="fragment">Clean Architeture.</li>
-						<li class="fragment">DCI.</li>
-						<li class="fragment">Hexagonal Architeture.</li>
-						<li class="fragment"><strong>Domain Driven Design.</strong></li>
+						<li class="fragment">DCI (Data, Context and Interaction);</li>
+						<li class="fragment">Hexagonal Architeture;</li>
+						<li class="fragment"><strong>Domain-Driven Design.</strong></li>
 					</ul>
 				</section>
 
@@ -98,6 +97,59 @@
 						Let's talk about DDD concepts.
 					</p>
 				</section>
+
+        <section>
+          <h2>Ubiquitous Language</h2>
+          <section>
+            <img src="http://userinexperience.com/wp-content/images/image_thumb_2.png">
+          </section>
+          <section>
+            <quote>Use the same language in diagrams, writing, and especially speech</quote>
+          </section>
+          <section>
+            <quote>Recognize that a change in the language is a change to the model.</quote>
+          </section>
+        </section>
+
+        <section>
+          <h2>Making Implicit concepts Explicit</h2>
+          <section>
+            <quote>Ubiquitous Language drives what should be explicit inside domain</quote>
+          </section>
+					<section data-markdown>
+						<script type="text/template">
+						```ruby
+  class MoneyTransfer
+    def ted(money, account_origin, account_destination)
+      fail OperationNotAllowed, '...' unless money > Money.new(500)
+
+      account_origin.withdraw(money)
+      account_destination.deposit(money)
+    end
+  end
+						```
+						</script>
+					</section>
+					<section data-markdown>
+						<script type="text/template">
+            ```ruby
+              class MoneyTransfer
+                def ted(money, account_origin, account_destination)
+                  fail OperationNotAllowed, '...' unless elegible_for_ted?(money)
+
+                  account_origin.withdraw(money)
+                  account_destination.deposit(money)
+                end
+
+                private
+                def elegible_for_ted?(money)
+                  money > Money.new(500)
+                end
+              end
+						```
+						</script>
+					</section>
+        </section>
 
 				<section>
 					<h2>Layers</h2>
@@ -178,7 +230,7 @@
 					</section>
 					<section data-markdown>
 						<script type="text/template">
-						```
+						```ruby
 						class Transaction
 						  attr_accessor :user
 
@@ -236,6 +288,41 @@
 					</section>
 				</section>
 
+        <section>
+          <h2>Services</h2>
+          <section>
+            <quote>The name Services emphasizes the relationship with other objects.</quote>
+          </section>
+          <section>
+            <img src="https://dl.dropboxusercontent.com/u/9481589/service-example.png">
+          </section>
+          <section>
+            <quote>Services should be used judiciously and not allowed to strip Entities and Value Objects of all their behavior.</quote>
+          </section>
+					<section data-markdown>
+						<script type="text/template">
+						```ruby
+  class ResourceTransfer # <-- Relates to Domain-Model
+    # method's name is part of the Language
+    def doc(money, origin_account, destination_account)
+      origin_account.withdraw(money) # <-- Entity
+      destination_account.deposit(money) # <-- Entity
+      # Money is a ValueObject
+    end
+  end
+						```
+						</script>
+					</section>
+          <section>
+            <p>A good service has three characteristics:</p>
+            <ul>
+              <li class="fragment">Relates to Domain concept that is not natural part of an Entity;</li>
+              <li class="fragment">Refer to Ubiquitous Language, and;</li>
+              <li class="fragment">The operation is stateless.</li>
+            </ul>
+          </section>
+        </section>
+
 				<section>
 					<h2>Anti Corruption Layer</h2>
 					<section>
@@ -255,7 +342,6 @@
 		<script src="js/reveal.js"></script>
 
 		<script>
-
 			// Full list of configuration options available at:
 			// https://github.com/hakimel/reveal.js#configuration
 			Reveal.initialize({
@@ -271,13 +357,12 @@
 					{ src: 'lib/js/classList.js', condition: function() { return !document.body.classList; } },
 					{ src: 'plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
 					{ src: 'plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
-					{ src: 'plugin/highlight/highlight.js', async: true, condition: function() { return !!document.querySelector( 'pre code' ); }, callback: function() { hljs.initHighlightingOnLoad(); } },
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
 					{ src: 'plugin/zoom-js/zoom.js', async: true },
 					{ src: 'plugin/notes/notes.js', async: true }
 				]
 			});
 
 		</script>
-
 	</body>
 </html>
